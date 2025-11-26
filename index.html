@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم کنترل تردد آنلاین | تایم‌مستر</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            gap: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .clock-display {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .date-display {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            height: fit-content;
+            margin-bottom: 20px;
+        }
+
+        h2 { margin-bottom: 20px; font-size: 1.2rem; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px; }
+
+        .user-action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .user-action-row:hover { border-color: #e5e7eb; transform: translateX(-5px); }
+
+        .manage-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .manage-row:last-child { border-bottom: none; }
+
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #d1d5db; }
+        .status-dot.active { background-color: var(--success); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-enter { background-color: var(--success); color: white; min-width: 100px; }
+        .btn-exit { background-color: var(--danger); color: white; min-width: 100px; }
+        .btn-add { background-color: var(--primary); color: white; width: 100%; padding: 12px; margin-top: 10px; }
+        
+        .btn-delete {
+            background-color: #fee2e2; color: #ef4444; padding: 5px 10px; font-size: 0.8rem; border-radius: 6px;
+        }
+        .btn-delete:hover { background-color: #fecaca; }
+
+        select, input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 10px; background: #fff; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { text-align: right; padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        th { color: var(--text-muted); font-size: 0.85rem; }
+
+        .badge-live { background: #ecfdf5; color: var(--success); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        
+        .report-result { margin-top: 15px; padding: 15px; background: #eef2ff; border-radius: 8px; color: var(--primary); font-weight: bold; text-align: center; }
+        
+        .scroll-area { max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 2rem;">🏢</span>
+                <div>
+                    <h1 style="font-size: 1.2rem;">سامانه کنترل تردد</h1>
+                    <span class="date-display" id="dateDisplay">---</span>
+                </div>
+            </div>
+            <div class="clock-display" id="clockDisplay">00:00:00</div>
+        </header>
+
+        <div class="grid-layout">
+            
+            <div style="display: flex; flex-direction: column;">
+                
+                <div class="card">
+                    <h2>وضعیت لحظه‌ای پرسنل</h2>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:15px;">برای ثبت تردد، روی دکمه مقابل نام پرسنل کلیک کنید.</p>
+                    <div id="usersListContainer" class="scroll-area"></div>
+                </div>
+
+                <div class="card">
+                    <h2>مدیریت پرسنل</h2>
+                    
+                    <form onsubmit="addUser(event)" style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+                        <label style="font-size:0.9rem; font-weight:bold; display:block; margin-bottom:5px;">افزودن شخص جدید:</label>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="newUserName" placeholder="نام" style="flex:1;" required>
+                            <input type="text" id="newUserRole" placeholder="سمت" style="flex:1;" required>
+                        </div>
+                        <button class="btn btn-add" type="submit" style="margin-top:0;">+ افزودن</button>
+                    </form>
+
+                    <label style="font-size:0.9rem; font-weight:bold; display:block; margin-bottom:10px;">لیست پرسنل موجود (جهت حذف):</label>
+                    <div id="manageUsersList" class="scroll-area" style="max-height: 150px; background: #f9fafb; padding: 10px; border-radius: 8px;">
+                        </div>
+                </div>
+
+                <div class="card" style="border-top: 4px solid var(--primary);">
+                    <h2>📊 محاسبه کارکرد ماهانه</h2>
+                    <select id="reportUserSelect" onchange="calculateMonthlyReport()">
+                        <option value="">یک پرسنل را انتخاب کنید...</option>
+                    </select>
+                    <div id="monthlyReportResult" class="report-result" style="display:none;">
+                        00 ساعت و 00 دقیقه
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column;">
+                
+                <div class="card" style="border-top: 4px solid var(--success);">
+                    <h2>🟢 افراد حاضر در شرکت</h2>
+                    <table id="activeSessionsTable">
+                        <thead>
+                            <tr><th>نام</th><th>زمان ورود</th><th>مدت حضور</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="noActiveMsg" style="text-align:center; padding:20px; color:var(--text-muted); display:none;">هیچکس داخل نیست.</div>
+                </div>
+
+                <div class="card">
+                    <h2>📋 سوابق تردد</h2>
+                    <table id="historyTable">
+                        <thead>
+                            <tr><th>نام</th><th>تاریخ</th><th>ورود</th><th>خروج</th><th>مدت</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <button 
+    class="btn btn-delete" 
+    onclick="resetData()" 
+    style="width: 100%; margin-top: 20px; background: #fef2f2; color: var(--danger); border: 1px solid var(--danger);">
+    ⚠️ پاکسازی کامل داده‌ها (شروع مجدد)
+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DB_USERS = 'attendance_v2_users';
+        const DB_SESSIONS = 'attendance_v2_sessions';
+        const DB_LOGS = 'attendance_v2_logs';
+
+        let users = JSON.parse(localStorage.getItem(DB_USERS)) || [];
+        let activeSessions = JSON.parse(localStorage.getItem(DB_SESSIONS)) || {}; 
+        let historyLogs = JSON.parse(localStorage.getItem(DB_LOGS)) || [];
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clockDisplay').innerText = now.toLocaleTimeString('fa-IR');
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'persian' };
+            document.getElementById('dateDisplay').innerText = new Intl.DateTimeFormat('fa-IR-u-ca-persian', dateOptions).format(now);
+            renderActiveSessions();
+        }
+        setInterval(updateClock, 1000);
+
+        function getJalaliDate() {
+            return new Intl.DateTimeFormat('fa-IR-u-ca-persian').format(new Date());
+        }
+
+        function addUser(e) {
+            e.preventDefault();
+            const name = document.getElementById('newUserName').value;
+            const role = document.getElementById('newUserRole').value;
+            users.push({ id: Date.now(), name, role });
+            saveData();
+            refreshAllUI();
+            e.target.reset();
+        }
+
+        function deleteUser(id) {
+            if(!confirm('آیا از حذف این پرسنل مطمئن هستید؟ این کار غیرقابل بازگشت است.')) return;
+            
+            users = users.filter(u => u.id !== id);
+            
+            if(activeSessions[id]) {
+                delete activeSessions[id];
+            }
+
+            saveData();
+            refreshAllUI();
+        }
+
+        function toggleAttendance(userId) {
+            const now = new Date();
+            if (activeSessions[userId]) {
+                const session = activeSessions[userId];
+                const startTime = new Date(session.isoStartTime);
+                const durationMinutes = Math.floor((now - startTime) / 60000);
+
+                const log = {
+                    id: Date.now(),
+                    userId: userId,
+                    date: session.jalaliDate, 
+                    enterTime: formatTime(startTime),
+                    exitTime: formatTime(now),
+                    duration: durationMinutes
+                };
+                historyLogs.unshift(log);
+                delete activeSessions[userId];
+            } else {
+                activeSessions[userId] = {
+                    isoStartTime: now.toISOString(),
+                    jalaliDate: getJalaliDate(),
+                    enterTimeDisplay: formatTime(now)
+                };
+            }
+            saveData();
+            refreshAllUI();
+        }
+
+        function calculateMonthlyReport() {
+            const selectedId = document.getElementById('reportUserSelect').value;
+            const resultDiv = document.getElementById('monthlyReportResult');
+
+            if (!selectedId) {
+                resultDiv.style.display = 'none';
+                return;
+            }
+
+            const currentJalaliMonth = getJalaliDate().split('/')[1]; 
+            const totalMinutes = historyLogs
+                .filter(log => {
+                    const logMonth = log.date.split('/')[1];
+                    return log.userId == selectedId && logMonth === currentJalaliMonth;
+                })
+                .reduce((sum, log) => sum + log.duration, 0);
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `مجموع ماه جاری: <br> ${minutesToHM(totalMinutes)}`;
+        }
+
+        function refreshAllUI() {
+            renderUserList();     
+            renderManageList();   
+            renderActiveSessions();
+            renderHistory();
+            updateReportSelect();
+            if(document.getElementById('reportUserSelect').value) calculateMonthlyReport();
+        }
+
+        function renderUserList() {
+            const container = document.getElementById('usersListContainer');
+            if(users.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999;">پرسنلی تعریف نشده است.</p>';
+                return;
+            }
+            container.innerHTML = users.map(user => {
+                const isPresent = !!activeSessions[user.id];
+                return `
+                <div class="user-action-row">
+                    <div class="user-info">
+                        <div class="status-dot ${isPresent ? 'active' : ''}"></div>
+                        <div>
+                            <div style="font-weight:bold;">${user.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${user.role}</div>
+                        </div>
+                    </div>
+                    <button class="btn ${isPresent ? 'btn-exit' : 'btn-enter'}" onclick="toggleAttendance(${user.id})">
+                        ${isPresent ? 'ثبت خروج' : 'ثبت ورود'}
+                    </button>
+                </div>`;
+            }).join('');
+        }
+
+        function renderManageList() {
+            const container = document.getElementById('manageUsersList');
+            if(users.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#999; font-size:0.8rem;">لیست خالی است</div>';
+                return;
+            }
+            container.innerHTML = users.map(user => `
+                <div class="manage-row">
+                    <span style="font-size:0.9rem;">${user.name} <span style="color:#999; font-size:0.8rem;">(${user.role})</span></span>
+                    <button class="btn btn-delete" onclick="deleteUser(${user.id})">🗑️ حذف</button>
+                </div>
+            `).join('');
+        }
+
+        function renderActiveSessions() {
+            const tbody = document.querySelector('#activeSessionsTable tbody');
+            const userIds = Object.keys(activeSessions);
+            document.getElementById('noActiveMsg').style.display = userIds.length === 0 ? 'block' : 'none';
+            const now = new Date();
+
+            tbody.innerHTML = userIds.map(uid => {
+                const user = users.find(u => u.id == uid);
+                if(!user) return ''; 
+                const session = activeSessions[uid];
+                const diffMs = now - new Date(session.isoStartTime);
+                const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                return `<tr>
+                    <td><strong>${user.name}</strong> <span class="badge-live">حاضر</span></td>
+                    <td>${session.enterTimeDisplay}</td>
+                    <td style="direction:ltr; text-align:right;">${hours}:${mins.toString().padStart(2, '0')}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderHistory() {
+            const tbody = document.querySelector('#historyTable tbody');
+            tbody.innerHTML = historyLogs.slice(0, 10).map(log => {
+                const user = users.find(u => u.id == log.userId);
+                return `<tr>
+                    <td>${user ? user.name : '<span style="color:#ef4444; font-size:0.8rem;">حذف شده</span>'}</td>
+                    <td>${log.date}</td>
+                    <td style="color:var(--success)">${log.enterTime}</td>
+                    <td style="color:var(--danger)">${log.exitTime}</td>
+                    <td>${minutesToHM(log.duration)}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updateReportSelect() {
+            const select = document.getElementById('reportUserSelect');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">یک پرسنل را انتخاب کنید...</option>' + 
+                users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+            select.value = currentVal; 
+        }
+
+        function formatTime(dateObj) { return dateObj.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }); }
+        function minutesToHM(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            return `${h} ساعت و ${m} دقیقه`;
+        }
+        function saveData() {
+            localStorage.setItem(DB_USERS, JSON.stringify(users));
+            localStorage.setItem(DB_SESSIONS, JSON.stringify(activeSessions));
+            localStorage.setItem(DB_LOGS, JSON.stringify(historyLogs));
+        }
+        
+        function resetData() {
+    if (!confirm("آیا مطمئن هستید که می‌خواهید تمام داده‌ها (پرسنل، ورود/خروج) را پاک کنید و از نو شروع کنید؟ این عمل غیرقابل بازگشت است.")) return;
+    
+    localStorage.removeItem(DB_USERS);
+    localStorage.removeItem(DB_SESSIONS);
+    localStorage.removeItem(DB_LOGS);
+
+    window.location.reload(); 
+}
+
+        updateClock();
+        refreshAllUI();
+        
+    </script>
+</body>
+</html>
